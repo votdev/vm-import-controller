@@ -379,7 +379,11 @@ func (c *Client) ExportVirtualMachine(vm *migration.VirtualMachineImport) error 
 	return nil
 }
 
-func (c *Client) PowerOffVirtualMachine(vm *migration.VirtualMachineImport) error {
+func (c *Client) ShutdownGuest(vm *migration.VirtualMachineImport) error {
+	return fmt.Errorf("shutdown guest OS is not supported by OpenStack")
+}
+
+func (c *Client) PowerOff(vm *migration.VirtualMachineImport) error {
 	serverUUID, err := c.checkOrGetUUID(vm.Spec.VirtualMachineName)
 	if err != nil {
 		return err
@@ -763,6 +767,11 @@ func generateNetworkInfo(info map[string]interface{}) ([]networkInfo, error) {
 
 // SanitizeVirtualMachineImport is used to sanitize the VirtualMachineImport object.
 func (c *Client) SanitizeVirtualMachineImport(vm *migration.VirtualMachineImport) error {
+	// Shutting down guest OS is not supported.
+	if vm.Spec.ShutdownGuest {
+		return fmt.Errorf("shutting down guest OS is not supported")
+	}
+
 	// If the given `spec.virtualMachineName` is a UUID, then we need to
 	// get the name from the OpenStack server object.
 	parsedUUID, err := uuid.Parse(vm.Spec.VirtualMachineName)

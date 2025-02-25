@@ -1,9 +1,12 @@
 package v1beta1
 
 import (
+	"time"
+
 	"github.com/rancher/wrangler/pkg/condition"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	kubevirtv1 "kubevirt.io/api/core/v1"
 
 	"github.com/harvester/vm-import-controller/pkg/apis/common"
@@ -17,6 +20,13 @@ type VirtualMachineImport struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              VirtualMachineImportSpec   `json:"spec"`
 	Status            VirtualMachineImportStatus `json:"status,omitempty"`
+}
+
+func (vmi *VirtualMachineImport) NamespacedName() string {
+	return types.NamespacedName{
+		Namespace: vmi.Namespace,
+		Name:      vmi.Name,
+	}.String()
 }
 
 // VirtualMachineImportSpec is used to create kubevirt VirtualMachines by exporting VM's from migration clusters.
@@ -33,6 +43,16 @@ type VirtualMachineImportSpec struct {
 	Folder       string           `json:"folder,omitempty"`
 	Mapping      []NetworkMapping `json:"networkMapping,omitempty"` //If empty new VirtualMachineImport will be mapped to Management Network
 	StorageClass string           `json:"storageClass,omitempty"`
+
+	// ShutdownGuest is a flag to indicate whether the guest OS should be
+	// shut down instead of performing a power off before the export is
+	// started. Note, this is only supported by VMware.
+	ShutdownGuest bool `json:"shutdownGuest,omitempty"`
+
+	// ShutdownGuestTimeout is the time in nanoseconds to wait for the guest
+	// OS to be shut down before a hard power off is triggered.
+	// Defaults to 5 minutes.
+	ShutdownGuestTimeout time.Duration `json:"shutdownGuestTimeout,omitempty"`
 }
 
 // VirtualMachineImportStatus tracks the status of the VirtualMachineImport export from migration and import into the Harvester cluster
@@ -84,6 +104,7 @@ const (
 	VirtualMachineRunning         ImportStatus   = "virtualMachineRunning"
 	VirtualMachineImportValid     ImportStatus   = "virtualMachineImportValid"
 	VirtualMachineImportInvalid   ImportStatus   = "virtualMachineImportInvalid"
+	VirtualMachineShutdownGuest   condition.Cond = "VMShutdownGuest"
 	VirtualMachinePoweringOff     condition.Cond = "VMPoweringOff"
 	VirtualMachinePoweredOff      condition.Cond = "VMPoweredOff"
 	VirtualMachineExported        condition.Cond = "VMExported"

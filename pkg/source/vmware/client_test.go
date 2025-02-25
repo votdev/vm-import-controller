@@ -77,7 +77,7 @@ func Test_NewClient(t *testing.T) {
 	assert.NoError(err, "expected no error during verification of client")
 }
 
-func Test_PowerOffVirtualMachine(t *testing.T) {
+func Test_PowerOff(t *testing.T) {
 	ctx := context.TODO()
 	endpoint := fmt.Sprintf("https://localhost:%s/sdk", vcsimPort)
 	dc := "DC0"
@@ -109,7 +109,7 @@ func Test_PowerOffVirtualMachine(t *testing.T) {
 		},
 	}
 
-	err = c.PowerOffVirtualMachine(vm)
+	err = c.PowerOff(vm)
 	assert.NoError(err, "expected no error during VM power off")
 }
 

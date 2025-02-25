@@ -85,7 +85,7 @@ func Test_IsPoweredOff(t *testing.T) {
 	assert.NoError(err, "expected no error during check of power status")
 }
 
-func Test_PowerOffVirtualMachine(t *testing.T) {
+func Test_PowerOff(t *testing.T) {
 	assert := require.New(t)
 	vmName, ok := os.LookupEnv("OS_VM_NAME")
 	assert.True(ok, "expected env variable VM_NAME to be set")
@@ -94,7 +94,7 @@ func Test_PowerOffVirtualMachine(t *testing.T) {
 			VirtualMachineName: vmName,
 		},
 	}
-	err := c.PowerOffVirtualMachine(vm)
+	err := c.PowerOff(vm)
 	assert.NoError(err, "expected no error during check of power status")
 }
 
