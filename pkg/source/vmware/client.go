@@ -492,14 +492,33 @@ func mapNetworkCards(networkCards []networkInfo, mapping []migration.NetworkMapp
 	return retNetwork
 }
 
-// adapterType tries to identify the disk bus type from vmware
-// to attempt and set correct bus types in kubevirt
-// default is to switch to SATA to ensure device boots
+// adapterType tries to identify the disk bus type from VMware to attempt and
+// set correct bus types in kubevirt.
+// Examples:
+// .-----------------------------------------------.
+// | Bus  | Device ID                              |
+// |------|----------------------------------------|
+// | SCSI | /vm-13010/ParaVirtualSCSIController0:0 |
+// | SATA | /vm-13767/VirtualAHCIController0:1     |
+// | IDE  | /vm-5678/VirtualIDEController1:0       |
+// | NVMe | /vm-2468/VirtualNVMEController0:0      |
+// | USB  | /vm-54321/VirtualUSBController0:0      |
+// '-----------------------------------------------'
 func adapterType(deviceID string) kubevirt.DiskBus {
-	if strings.Contains(deviceID, "SCSI") {
+	deviceID = strings.ToLower(deviceID)
+	// https://kubevirt.io/api-reference/v1.1.0/definitions.html#_v1_disktarget
+	switch {
+	case strings.Contains(deviceID, "scsi"):
 		return kubevirt.DiskBusSCSI
+	case strings.Contains(deviceID, "ahci"), strings.Contains(deviceID, "sata"), strings.Contains(deviceID, "ide"):
+		return kubevirt.DiskBusSATA
+	case strings.Contains(deviceID, "nvme"):
+		return kubevirt.DiskBusVirtio
+	case strings.Contains(deviceID, "usb"):
+		return kubevirt.DiskBusUSB
+	default:
+		return kubevirt.DiskBusVirtio
 	}
-	return kubevirt.DiskBusSATA
 }
 
 // SanitizeVirtualMachineImport is used to sanitize the VirtualMachineImport object.
