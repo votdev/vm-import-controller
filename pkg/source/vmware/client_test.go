@@ -346,7 +346,7 @@ func Test_adapterType(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		busType := adapterType(tc.deviceID)
+		busType := detectBusType(tc.deviceID)
 		assert.Equal(tc.expected, busType)
 	}
 }

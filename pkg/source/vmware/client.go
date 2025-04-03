@@ -186,6 +186,8 @@ func (c *Client) ExportVirtualMachine(vm *migration.VirtualMachineImport) (err e
 				i.Path = vm.Name + "-" + vm.Namespace + "-" + i.Path
 			}
 
+			busType := detectBusType(i.DeviceId)
+
 			logrus.WithFields(logrus.Fields{
 				"name":                    vm.Name,
 				"namespace":               vm.Namespace,
@@ -194,6 +196,7 @@ func (c *Client) ExportVirtualMachine(vm *migration.VirtualMachineImport) (err e
 				"spec.sourceCluster.kind": vm.Spec.SourceCluster.Kind,
 				"deviceId":                i.DeviceId,
 				"path":                    i.Path,
+				"busType":                 busType,
 				"size":                    i.Size,
 			}).Info("Downloading an image")
 
@@ -205,7 +208,7 @@ func (c *Client) ExportVirtualMachine(vm *migration.VirtualMachineImport) (err e
 			vm.Status.DiskImportStatus = append(vm.Status.DiskImportStatus, migration.DiskInfo{
 				Name:     i.Path,
 				DiskSize: i.Size,
-				BusType:  adapterType(i.DeviceId),
+				BusType:  busType,
 			})
 		} else {
 			logrus.WithFields(logrus.Fields{
@@ -492,7 +495,7 @@ func mapNetworkCards(networkCards []networkInfo, mapping []migration.NetworkMapp
 	return retNetwork
 }
 
-// adapterType tries to identify the disk bus type from VMware to attempt and
+// detectBusType tries to identify the disk bus type from VMware to attempt and
 // set correct bus types in kubevirt.
 // Examples:
 // .-----------------------------------------------.
@@ -504,7 +507,7 @@ func mapNetworkCards(networkCards []networkInfo, mapping []migration.NetworkMapp
 // | NVMe | /vm-2468/VirtualNVMEController0:0      |
 // | USB  | /vm-54321/VirtualUSBController0:0      |
 // '-----------------------------------------------'
-func adapterType(deviceID string) kubevirt.DiskBus {
+func detectBusType(deviceID string) kubevirt.DiskBus {
 	deviceID = strings.ToLower(deviceID)
 	// https://kubevirt.io/api-reference/v1.1.0/definitions.html#_v1_disktarget
 	switch {
